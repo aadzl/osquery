@@ -1,0 +1,8 @@
+table_name("chef_run_list")
+description("Chef run_list items.")
+schema([
+    Column("seq_no", INTEGER, "Sequence number in run_list execution"),
+    Column("recipe", TEXT, "Chef recipe name"),
+    Column("role", TEXT, "Chef role name"),
+])
+implementation("applications/chef_run_list@genChefRunList")
