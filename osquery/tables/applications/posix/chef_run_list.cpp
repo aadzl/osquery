@@ -17,24 +17,15 @@
 #include <osquery/tables.h>
 
 #include "osquery/core/json.h"
+#include "osquery/tables/applications/posix/chef_run_list.h"
 
 namespace osquery {
 namespace tables {
 
 static const std::string kChefFirstBootJSON = "/etc/chef/first-boot.json";
 
-static const std::string kChefRoleSearchTerm = "role[";
-static const std::string kChefRecipeSearchTerm = "recipe[";
-
-struct ChefRunListItem {
-  std::string name;
-  rapidjson::SizeType seqNum;
-};
-
-struct ChefRunList {
-  std::vector<ChefRunListItem> roles;
-  std::vector<ChefRunListItem> recipes;
-};
+const std::string kChefRoleSearchTerm = "role[";
+const std::string kChefRecipeSearchTerm = "recipe[";
 
 static inline rapidjson::Document getFirstBootJson(const std::string& path) {
   rapidjson::Document d;
@@ -53,7 +44,7 @@ static inline rapidjson::Document getFirstBootJson(const std::string& path) {
   return d;
 }
 
-static inline bool isRole(const std::string& item, std::string& name) {
+bool isRole(const std::string& item, std::string& name) {
   if (item.find(kChefRoleSearchTerm) != 0) {
     return false;
   }
@@ -63,7 +54,7 @@ static inline bool isRole(const std::string& item, std::string& name) {
   return true;
 }
 
-static inline bool isRecipe(const std::string& item, std::string& name) {
+bool isRecipe(const std::string& item, std::string& name) {
   if (item.find(kChefRecipeSearchTerm) == 0) {
     name = item.substr(kChefRecipeSearchTerm.length(),
                        item.length() - kChefRecipeSearchTerm.length() - 1);
@@ -78,7 +69,7 @@ static inline bool isRecipe(const std::string& item, std::string& name) {
   return false;
 }
 
-static void parseRunList(rapidjson::Document&& doc, ChefRunList& runlist) {
+void parseRunList(rapidjson::Document& doc, ChefRunList& runlist) {
   if (!doc.HasMember("run_list")) {
     return;
   }
@@ -114,7 +105,8 @@ QueryData genChefRunList(QueryContext& context) {
   QueryData results;
 
   ChefRunList rl;
-  parseRunList(getFirstBootJson(kChefFirstBootJSON), rl);
+  auto d = getFirstBootJson(kChefFirstBootJSON);
+  parseRunList(d, rl);
 
   for (const auto& role : rl.roles) {
     Row r;
