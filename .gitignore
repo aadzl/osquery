@@ -64,4 +64,3 @@ doxygen/latex
 /external/*
 !/external/CMakeLists.txt
 
-
