@@ -63,3 +63,4 @@ doxygen/latex
 # Ignored components
 /external/*
 !/external/CMakeLists.txt
+
