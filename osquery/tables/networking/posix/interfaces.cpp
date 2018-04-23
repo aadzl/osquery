@@ -17,7 +17,10 @@
 #include <sys/socket.h>
 
 #ifdef __linux__
+#include <limits>
+#include <linux/ethtool.h>
 #include <linux/if_link.h>
+#include <linux/sockios.h>
 #include <sys/ioctl.h>
 #endif
 
@@ -129,6 +132,19 @@ void genDetailsFromAddr(const struct ifaddrs* addr, QueryData& results) {
       if (ioctl(fd, SIOCGIFFLAGS, &ifr) >= 0) {
         r["flags"] = INTEGER(static_cast<size_t>(ifr.ifr_flags));
       }
+
+      struct ethtool_cmd cmd;
+      ifr.ifr_data = reinterpret_cast<char*>(&cmd);
+      cmd.cmd = ETHTOOL_GSET;
+
+      if (ioctl(fd, SIOCETHTOOL, &ifr) >= 0) {
+        auto speed = ethtool_cmd_speed(&cmd);
+
+        if (speed != std::numeric_limits<uint32_t>::max()) {
+          r["link_speed"] = BIGINT_FROM_UINT32(speed);
+        }
+      }
+
       close(fd);
     }
 
@@ -206,5 +222,5 @@ QueryData genInterfaceDetails(QueryContext& context) {
   freeifaddrs(if_addrs);
   return results;
 }
-}
-}
+} // namespace tables
+} // namespace osquery
